@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="war" build-on-make="true" name="spring-json:war">
+    <output-path>$PROJECT_DIR$/target</output-path>
+    <root id="archive" name="weixin-0.0.1.war">
+      <element id="artifact" artifact-name="spring-json:war exploded" />
+    </root>
+  </artifact>
+</component>
