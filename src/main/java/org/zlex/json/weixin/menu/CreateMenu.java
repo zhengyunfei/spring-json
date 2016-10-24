@@ -81,9 +81,8 @@ public class CreateMenu {
     public static void main(String[] args) {
         // 这是一个符合菜单的json格式，“\”是转义符
         String jsonMenu = "{\"button\":[" +
-                "{\"name\":\"助手服务2\",\"sub_button\":[" +
-                "{\"name\":\"生成图片\",\"key\":\"2\",\"type\":\"click\"}," +
-                "{\"name\":\"图文\",\"key\":\"3\",\"type\":\"click\"}" +
+                "{\"name\":\"助手服务\",\"sub_button\":[" +
+                "{\"name\":\"发送图片\",\"key\":\"2\",\"type\":\"click\"}" +
                 "]}]}";
         System.out.println(jsonMenu);
         CreateMenu impl = new CreateMenu();

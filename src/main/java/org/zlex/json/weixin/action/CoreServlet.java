@@ -141,6 +141,7 @@ public class CoreServlet {
 						//File file = new File("f:" + File.separator + "167580248.jpg"); // 获取本地文件
 						org.zlex.json.weixin.utils.Config config=new org.zlex.json.weixin.utils.Config();
 						String imagePath=config.getString("imageUrl");
+						System.out.println("imageURl========================="+imagePath);
 						File file = new File(imagePath); // 获取本地文件
 						String accessToken = GetAccessTokenUtil.getAccess_token(Config.APPID, Config.SECRET);
 

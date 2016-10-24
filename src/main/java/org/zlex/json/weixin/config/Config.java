@@ -8,6 +8,6 @@ package org.zlex.json.weixin.config;
  * @version 1.0
  */
 public interface Config {
-	String APPID = "wxba458b8ccfd615ef";
-	String SECRET = "453a2cc14bfa6b4f3fc4b27bbc6e7c5e";
+	String APPID = "wxe24e1539a4ad65aa";
+	String SECRET = "e58e3eb8a567e31322bc29b259fa5b14";
 }
