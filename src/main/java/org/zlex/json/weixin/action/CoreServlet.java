@@ -1,15 +1,13 @@
 package org.zlex.json.weixin.action;
 
+import net.sf.json.JSONObject;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.zlex.json.weixin.config.Config;
 import org.zlex.json.weixin.msg.*;
-import org.zlex.json.weixin.utils.GetAccessTokenUtil;
-import org.zlex.json.weixin.utils.MessageUtil;
-import org.zlex.json.weixin.utils.SignUtil;
-import org.zlex.json.weixin.utils.Test;
+import org.zlex.json.weixin.utils.*;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -18,6 +16,7 @@ import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -92,7 +91,7 @@ public class CoreServlet {
 			imageMessage.setCreateTime(new Date().getTime());
 			imageMessage.setMsgType(MessageUtil.REQ_MESSAGE_TYPE_IMAGE);
 			//imageMessage.setPicUrl("http://www.pestreet.cn/c/freemarker/upload/img/20150618/20150618142923banner.jpg");
-			imageMessage.setMsgId(Long.parseLong(System.currentTimeMillis()+"00"));
+			imageMessage.setMsgId(Long.parseLong(System.currentTimeMillis() + "00"));
 
 			NewsMessage newsMessage = new NewsMessage();
 			newsMessage.setToUserName(fromUserName);
@@ -128,67 +127,83 @@ public class CoreServlet {
 				String eventType = requestMap.get("Event");
 				// 订阅
 				if (eventType.equals(MessageUtil.EVENT_TYPE_SUBSCRIBE)) {
-					respContent="欢迎关注";
+					respContent = "欢迎关注";
 				}
 
 				// 自定义菜单点击事件
 				if (eventType.equals(MessageUtil.EVENT_TYPE_CLICK)) {
 					// 事件KEY值，与创建自定义菜单时指定的KEY值对应
 					String eventKey = requestMap.get("EventKey");
-					System.out.println("eventKey========================="+eventKey);
+					System.out.println("eventKey=========================" + eventKey);
 					if (eventKey.equals("2")) {
+						String access_token = GetAccessTokenUtil.getAccess_token(Config.APPID, Config.SECRET);
+						String openId=fromUserName;
+						String url="https://api.weixin.qq.com/cgi-bin/user/info?access_token="+access_token+"&openid="+openId+"&lang=zh_CN";
+						String userInfoJson = HttpUtil.getUrl(url);
+						JSONObject userInfoJO = JSONObject.fromObject(userInfoJson);
+						if(userInfoJO.has("nickname")){
+							String user_nickname = userInfoJO.getString("nickname");
+							user_nickname=  new String(user_nickname.getBytes("iso-8859-1"),"utf-8");
+							System.out.println("昵称==========================="+user_nickname);
+						}
+						if(userInfoJO.has("headimgurl")){
+							String user_headimgurl = userInfoJO.getString("headimgurl");
+							System.out.println("头像==========================="+user_headimgurl);
+						}
+
 						// 将图文消息对象转换成xml字符串
 						//File file = new File("f:" + File.separator + "167580248.jpg"); // 获取本地文件
-						org.zlex.json.weixin.utils.Config config=new org.zlex.json.weixin.utils.Config();
-						String imagePath=config.getString("imageUrl");
-						System.out.println("imageURl========================="+imagePath);
+						getUser(request,response);
+						org.zlex.json.weixin.utils.Config config = new org.zlex.json.weixin.utils.Config();
+						String imagePath = config.getString("imageUrl");
+						System.out.println("imageURl=========================" + imagePath);
 						File file = new File(imagePath); // 获取本地文件
 						String accessToken = GetAccessTokenUtil.getAccess_token(Config.APPID, Config.SECRET);
 
 						String id = Test.uploadImage(UPLOAD_IMAGE_URL, accessToken, "image",
 								file);// 上传文件
-							System.out.println("获取mediaId=============================="+id);
-						Image image=new Image();
+						System.out.println("获取mediaId==============================" + id);
+						Image image = new Image();
 						image.setMediaId(id);
 						imageMessage.setImage(image);
 						respMessage = MessageUtil.imageMessageToXml(imageMessage);
 						//respMessage = MessageUtil.textMessageToXml(textMessage);
-						System.out.println("respMessage======="+respMessage);
+						System.out.println("respMessage=======" + respMessage);
 					}
 					if (eventKey.equals("3")) {
 						// 将图文消息对象转换成xml字符串
-						Article article=new Article();
+						Article article = new Article();
 						//article.setPicUrl(imageMessage.getPicUrl());
-					//	article.setUrl(imageMessage.getPicUrl());
+						//	article.setUrl(imageMessage.getPicUrl());
 						newsMessage.setArticleCount(1);
-						List<Article> list=new ArrayList<Article>();
+						List<Article> list = new ArrayList<Article>();
 						list.add(article);
 						newsMessage.setArticles(list);
-						respMessage=MessageUtil.newsMessageToXml(newsMessage);
+						respMessage = MessageUtil.newsMessageToXml(newsMessage);
 						//imageMessage.setMediaId("1234567890123456");
 						respMessage = MessageUtil.newsMessageToXml(newsMessage);
 						//respMessage = MessageUtil.textMessageToXml(textMessage);
-						System.out.println("respMessage======="+respMessage);
+						System.out.println("respMessage=======" + respMessage);
 					}
 				}
 
 			}
-			if(!"".equals(respContent)&&null!=respContent) {
+			if (!"".equals(respContent) && null != respContent) {
 				System.out.println("回复文本消息=====================");
 
 				textMessage.setContent(respContent);
 
 				respMessage = MessageUtil.textMessageToXml(textMessage);
 				PrintWriter out = response.getWriter();
-				System.out.println("开始================================================"+respMessage);
+				System.out.println("开始================================================" + respMessage);
 
 				out.print(respMessage);
 				out.close();
 				System.out.println("完毕================================================");
 			}
-			if(!"".equals(respMessage)&&null!=respMessage){
+			if (!"".equals(respMessage) && null != respMessage) {
 				PrintWriter out = response.getWriter();
-				System.out.println("开始================================================"+respMessage);
+				System.out.println("开始================================================" + respMessage);
 
 				out.print(respMessage);
 				out.close();
@@ -200,5 +215,59 @@ public class CoreServlet {
 		// 响应消息
 
 	}
-}
 
+	/**
+	 * 获取用户基本信息
+	 * @param request
+	 * @param response
+     */
+	public void getUser(HttpServletRequest request, HttpServletResponse response) {
+		String get_access_token_url = "https://api.weixin.qq.com/sns/oauth2/access_token?" +
+				"appid=APPID" +
+				"&secret=SECRET&" +
+				"code=CODE&grant_type=authorization_code";
+		String get_userinfo = "https://api.weixin.qq.com/cgi-bin/user/info?access_token=ACCESS_TOKEN&openid=OPENID";
+		try {
+			// 将请求、响应的编码均设置为UTF-8（防止中文乱码）
+			// xml请求解析
+			// 将请求、响应的编码均设置为UTF-8（防止中文乱码）
+			request.setCharacterEncoding("UTF-8");
+			response.setCharacterEncoding("UTF-8");
+			String code = request.getParameter("code");
+			//判断页面跳转
+			String key = request.getParameter("state");
+			String appid = Config.APPID;
+			String appsecret = Config.SECRET;
+			get_access_token_url = get_access_token_url.replace("APPID", appid);
+			get_access_token_url = get_access_token_url.replace("SECRET", appsecret);
+			get_access_token_url = get_access_token_url.replace("CODE", code);
+
+			String json = HttpUtil.getUrl(get_access_token_url);
+			String openid = "";
+			JSONObject jsonObject = JSONObject.fromObject(json);
+			if (jsonObject.has("openid")) {
+				openid = jsonObject.getString("openid");
+			}
+
+
+			System.out.println("第一个用户oid=========" + openid);
+			//用户基本信息
+			String access_token = GetAccessTokenUtil.getAccess_token(Config.APPID, Config.SECRET);
+			get_userinfo = get_userinfo.replace("ACCESS_TOKEN", access_token);
+			get_userinfo = get_userinfo.replace("OPENID", openid);
+			String userInfoJson = HttpUtil.getUrl(get_userinfo);
+			JSONObject userInfoJO = JSONObject.fromObject(userInfoJson);
+			if (userInfoJO.has("nickname")) {
+				String user_nickname = userInfoJO.getString("nickname");
+				user_nickname = new String(user_nickname.getBytes("iso-8859-1"), "utf-8");
+				System.out.println("昵称===========================" + user_nickname);
+			}
+			if (userInfoJO.has("headimgurl")) {
+				String user_headimgurl = userInfoJO.getString("headimgurl");
+				System.out.println("头像===========================" + user_headimgurl);
+			}
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+	}
+}
